@@ -175,28 +175,29 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
     const handleTouchEnd = () => handleDragEnd();
 
     if (isDragging) {
-      document.addEventListener("mousemove", (e) => {
-        handleMouseMove(e as unknown as MouseEvent);
-      });
+      document.addEventListener(
+        "mousemove",
+        handleMouseMove as unknown as EventListener
+      );
       document.addEventListener("mouseup", handleMouseUp);
       document.addEventListener(
         "touchmove",
-        (e) => {
-          handleTouchMove(e as unknown as TouchEvent);
-        },
+        handleTouchMove as unknown as EventListener,
         { passive: false }
       );
       document.addEventListener("touchend", handleTouchEnd);
     }
 
     return () => {
-      document.removeEventListener("mousemove", (e) => {
-        handleMouseMove(e as unknown as MouseEvent);
-      });
+      document.removeEventListener(
+        "mousemove",
+        handleMouseMove as unknown as EventListener
+      );
       document.removeEventListener("mouseup", handleMouseUp);
-      document.removeEventListener("touchmove", (e) => {
-        handleTouchMove(e as unknown as TouchEvent);
-      });
+      document.removeEventListener(
+        "touchmove",
+        handleTouchMove as unknown as EventListener
+      );
       document.removeEventListener("touchend", handleTouchEnd);
     };
   }, [isDragging]);
