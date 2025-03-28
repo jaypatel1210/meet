@@ -11,7 +11,10 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "*", // TODO: In production, replace with your frontend URL
+    origin: [
+      "https://meet.jaypatel.digital",
+      "https://meet-zeta-five.vercel.app",
+    ],
     methods: ["GET", "POST"],
   },
 });
