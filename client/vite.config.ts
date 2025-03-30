@@ -10,6 +10,15 @@ export default defineConfig({
     TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
     react(),
     tailwindcss(),
+    {
+      name: "html-transform",
+      transformIndexHtml(html) {
+        return html.replace(
+          /<title>(.*?)<\/title>/,
+          `<title>Meet - One-to-One Video Calling</title>`
+        );
+      },
+    },
   ],
   resolve: {
     alias: {
