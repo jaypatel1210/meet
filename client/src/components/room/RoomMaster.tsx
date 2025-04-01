@@ -425,6 +425,8 @@ const Room = ({ name, roomId }: RoomProps) => {
     (player) => player.stream !== myStream?.stream
   );
   console.log("remoteUser", remoteUser);
+  const isRemoteUser = Boolean(remoteUser);
+  const mainStream = isRemoteUser ? remoteUser : myStream;
 
   return (
     <div className="flex flex-col h-screen bg-gray-900">
@@ -432,7 +434,7 @@ const Room = ({ name, roomId }: RoomProps) => {
         {layoutMode === "default" ? (
           <>
             <div className="absolute inset-0 flex items-center justify-center">
-              {remoteUser?.isVideoOn ? (
+              {mainStream?.isVideoOn ? (
                 <div
                   className={cn(
                     "relative w-full h-full object-cover",
@@ -440,57 +442,135 @@ const Room = ({ name, roomId }: RoomProps) => {
                   )}
                 >
                   <ReactPlayer
-                    url={remoteUser.stream}
-                    playing={remoteUser.isVideoOn}
+                    url={mainStream.stream}
+                    playing={mainStream.isVideoOn}
                     width="100%"
                     height="100%"
-                    muted={!remoteUser.isMicOn}
+                    muted={!mainStream.isMicOn}
                   />
                 </div>
               ) : (
                 <div className="relative">
                   <Avatar className="h-32 w-32">
                     <AvatarFallback className="text-4xl bg-gray-700 text-gray-200">
-                      {remoteUser?.name.charAt(0).toUpperCase()}
+                      {mainStream?.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </div>
               )}
               <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
-                {remoteUser?.name}
+                {mainStream?.name}
               </div>
-              {!remoteUser?.isMicOn && (
+              {!mainStream?.isMicOn && (
                 <div className="absolute top-4 right-4 bg-gray-900/70 rounded-full p-1.5">
                   <MicOff className="h-5 w-5 text-red-500" />
                 </div>
               )}
             </div>
 
-            <div
-              ref={selfViewRef}
-              className={cn(
-                "absolute w-48 h-36 rounded-lg overflow-hidden border-2 border-gray-700 shadow-lg cursor-move",
-                isDragging ? "opacity-75" : "opacity-100"
+            {isRemoteUser && (
+              <div
+                ref={selfViewRef}
+                className={cn(
+                  "absolute w-48 h-36 rounded-lg overflow-hidden border-2 border-gray-700 shadow-lg cursor-move",
+                  isDragging ? "opacity-75" : "opacity-100"
+                )}
+                style={{
+                  left: `${selfViewPosition.x}px`,
+                  top: `${selfViewPosition.y}px`,
+                  touchAction: "none", // Prevents scrolling while dragging on touch devices
+                }}
+                onMouseDown={(e) =>
+                  handleDragStart(
+                    e as unknown as MouseEvent<HTMLDivElement, MouseEvent>
+                  )
+                }
+                onTouchStart={(e) =>
+                  handleDragStart(e as TouchEvent<HTMLDivElement>)
+                }
+              >
+                <div className="relative w-full h-full">
+                  {myStream?.isVideoOn ? (
+                    <div
+                      className={cn(
+                        "w-full h-full object-cover bg-gray-800",
+                        isMirrored && "scale-x-[-1]"
+                      )}
+                    >
+                      <ReactPlayer
+                        muted
+                        url={myStream.stream}
+                        playing={myStream.isVideoOn}
+                        width="100%"
+                        height="100%"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                      <Avatar className="h-16 w-16">
+                        <AvatarFallback className="bg-gray-700 text-gray-200">
+                          {myStream?.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  )}
+
+                  {!myStream?.isMicOn && (
+                    <div className="absolute top-2 right-2 bg-gray-900/70 rounded-full p-1">
+                      <MicOff className="h-4 w-4 text-red-500" />
+                    </div>
+                  )}
+
+                  <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
+                    {myStream?.name}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 h-full gap-4 p-4">
+            <div className="relative rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center aspect-video">
+              {mainStream?.isVideoOn ? (
+                <div
+                  className={cn(
+                    "relative w-full h-full object-cover",
+                    isMirrored && "scale-x-[-1]"
+                  )}
+                >
+                  <ReactPlayer
+                    url={mainStream.stream}
+                    playing={mainStream.isVideoOn}
+                    width="100%"
+                    height="100%"
+                    muted={!mainStream.isMicOn}
+                  />
+                </div>
+              ) : (
+                <Avatar className="h-24 w-24">
+                  <AvatarFallback className="text-3xl bg-gray-700 text-gray-200">
+                    {mainStream?.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
               )}
-              style={{
-                left: `${selfViewPosition.x}px`,
-                top: `${selfViewPosition.y}px`,
-                touchAction: "none", // Prevents scrolling while dragging on touch devices
-              }}
-              onMouseDown={(e) =>
-                handleDragStart(
-                  e as unknown as MouseEvent<HTMLDivElement, MouseEvent>
-                )
-              }
-              onTouchStart={(e) =>
-                handleDragStart(e as TouchEvent<HTMLDivElement>)
-              }
-            >
-              <div className="relative w-full h-full">
+              <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
+                {mainStream?.name}
+              </div>
+
+              {!mainStream?.isMicOn && (
+                <div className="absolute top-2 right-2 bg-gray-900/70 rounded-full p-1.5">
+                  <MicOff className="h-4 w-4 text-red-500" />
+                </div>
+              )}
+            </div>
+
+            {/* Self view */}
+            {isRemoteUser && (
+              <div className="relative rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center aspect-video">
                 {myStream?.isVideoOn ? (
                   <div
                     className={cn(
-                      "w-full h-full object-cover bg-gray-800",
+                      "relative w-full h-full object-cover",
                       isMirrored && "scale-x-[-1]"
                     )}
                   >
@@ -503,97 +583,23 @@ const Room = ({ name, roomId }: RoomProps) => {
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                    <Avatar className="h-16 w-16">
-                      <AvatarFallback className="bg-gray-700 text-gray-200">
-                        {myStream?.name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
+                  <Avatar className="h-24 w-24">
+                    <AvatarFallback className="text-3xl bg-gray-700 text-gray-200">
+                      {myStream?.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
                 )}
-
-                {!myStream?.isMicOn && (
-                  <div className="absolute top-2 right-2 bg-gray-900/70 rounded-full p-1">
-                    <MicOff className="h-4 w-4 text-red-500" />
-                  </div>
-                )}
-
                 <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
                   {myStream?.name}
                 </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 h-full gap-4 p-4">
-            <div className="relative rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center aspect-video">
-              {remoteUser?.isVideoOn ? (
-                <div
-                  className={cn(
-                    "relative w-full h-full object-cover",
-                    isMirrored && "scale-x-[-1]"
-                  )}
-                >
-                  <ReactPlayer
-                    url={remoteUser.stream}
-                    playing={remoteUser.isVideoOn}
-                    width="100%"
-                    height="100%"
-                    muted={!remoteUser.isMicOn}
-                  />
-                </div>
-              ) : (
-                <Avatar className="h-24 w-24">
-                  <AvatarFallback className="text-3xl bg-gray-700 text-gray-200">
-                    {remoteUser?.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
-                {remoteUser?.name}
-              </div>
 
-              {!remoteUser?.isMicOn && (
-                <div className="absolute top-2 right-2 bg-gray-900/70 rounded-full p-1.5">
-                  <MicOff className="h-4 w-4 text-red-500" />
-                </div>
-              )}
-            </div>
-
-            {/* Self view */}
-            <div className="relative rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center aspect-video">
-              {myStream?.isVideoOn ? (
-                <div
-                  className={cn(
-                    "relative w-full h-full object-cover",
-                    isMirrored && "scale-x-[-1]"
-                  )}
-                >
-                  <ReactPlayer
-                    muted
-                    url={myStream.stream}
-                    playing={myStream.isVideoOn}
-                    width="100%"
-                    height="100%"
-                  />
-                </div>
-              ) : (
-                <Avatar className="h-24 w-24">
-                  <AvatarFallback className="text-3xl bg-gray-700 text-gray-200">
-                    {myStream?.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
-                {myStream?.name}
+                {!myStream?.isMicOn && (
+                  <div className="absolute top-2 right-2 bg-gray-900/70 rounded-full p-1.5">
+                    <MicOff className="h-4 w-4 text-red-500" />
+                  </div>
+                )}
               </div>
-
-              {!myStream?.isMicOn && (
-                <div className="absolute top-2 right-2 bg-gray-900/70 rounded-full p-1.5">
-                  <MicOff className="h-4 w-4 text-red-500" />
-                </div>
-              )}
-            </div>
+            )}
           </div>
         )}
 
