@@ -41,7 +41,10 @@ io.on("connection", (socket) => {
         throw new Error("Invalid room data");
       }
       socket.join(data.roomId);
-      socket.broadcast.to(data.roomId).emit("user-connected", data.peerId);
+      socket.broadcast.to(data.roomId).emit("user-connected", {
+        newUserPID: data.peerId,
+        name: data.name,
+      });
     } catch (error) {
       console.error("Error in join-room:", error);
       socket.emit("error", { message: "Failed to join room" });

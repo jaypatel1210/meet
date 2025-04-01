@@ -28,14 +28,11 @@ interface RoomProps {
   roomId: string;
 }
 
-const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
+const Room = ({ name, roomId }: RoomProps) => {
   const [layoutMode, setLayoutMode] = useState<"default" | "side-by-side">(
     "default"
   );
   const [isMirrored, setIsMirrored] = useState(true);
-
-  console.log("isVideoOn", isVideoOn);
-  console.log("isAudioOn", isAudioOn);
 
   const [selfViewPosition, setSelfViewPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -55,6 +52,7 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
       isMicOn: boolean;
       isVideoOn: boolean;
       call: MediaConnection | null;
+      name: string;
     };
   }>({});
 
@@ -252,11 +250,13 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
             isMicOn: false,
             isVideoOn: true,
             call: null,
+            name,
           },
         }));
         socket.emit("join-room", {
           roomId,
           peerId: myPeerId,
+          name,
         });
       } catch (error) {
         console.error("Error accessing local stream", error);
@@ -282,12 +282,21 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
   useEffect(() => {
     if (!myPeerId || !peer || !socket) return;
 
-    const handleUserConnected = (newUserPID: string) => {
+    const handleUserConnected = ({
+      newUserPID,
+      name: _name,
+    }: {
+      newUserPID: string;
+      name: string;
+    }) => {
       console.log("User connected", newUserPID);
-      console.log("peer", peer);
 
       // send host stream to others(peer)
-      const call = peer.call(newUserPID, localStream!);
+      const call = peer.call(newUserPID, localStream!, {
+        metadata: {
+          name: window.btoa(name),
+        },
+      });
 
       console.log("call", call);
 
@@ -301,6 +310,7 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
             isMicOn: false,
             isVideoOn: true,
             call,
+            name: _name,
           },
         }));
       });
@@ -321,7 +331,9 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
     if (!peer || !localStream) return;
 
     const handleCall = (call: MediaConnection) => {
-      const { peer: callerId } = call;
+      const { peer: callerId, metadata } = call;
+
+      const _name = metadata ? window.atob(metadata.name) : "";
 
       // another peer will send stream to host
       // call.answer(localStreamRef.current as MediaStream);
@@ -336,6 +348,7 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
             isMicOn: false,
             isVideoOn: true,
             call,
+            name: _name,
           },
         }));
       });
@@ -438,13 +451,13 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
                 <div className="relative">
                   <Avatar className="h-32 w-32">
                     <AvatarFallback className="text-4xl bg-gray-700 text-gray-200">
-                      JD
+                      {remoteUser?.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </div>
               )}
               <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
-                John Doe
+                {remoteUser?.name}
               </div>
               {!remoteUser?.isMicOn && (
                 <div className="absolute top-4 right-4 bg-gray-900/70 rounded-full p-1.5">
@@ -493,7 +506,7 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
                   <div className="w-full h-full flex items-center justify-center bg-gray-800">
                     <Avatar className="h-16 w-16">
                       <AvatarFallback className="bg-gray-700 text-gray-200">
-                        {name.charAt(0).toUpperCase()}
+                        {myStream?.name.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -506,7 +519,7 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
                 )}
 
                 <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
-                  {name}
+                  {myStream?.name}
                 </div>
               </div>
             </div>
@@ -532,12 +545,12 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
               ) : (
                 <Avatar className="h-24 w-24">
                   <AvatarFallback className="text-3xl bg-gray-700 text-gray-200">
-                    JD
+                    {remoteUser?.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               )}
               <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
-                John Doe
+                {remoteUser?.name}
               </div>
 
               {!remoteUser?.isMicOn && (
@@ -567,12 +580,12 @@ const Room = ({ isVideoOn, isAudioOn, name, roomId }: RoomProps) => {
               ) : (
                 <Avatar className="h-24 w-24">
                   <AvatarFallback className="text-3xl bg-gray-700 text-gray-200">
-                    {name.charAt(0).toUpperCase()}
+                    {myStream?.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               )}
               <div className="absolute bottom-2 left-2  px-2 py-1 text-white text-xs">
-                {name}
+                {myStream?.name}
               </div>
 
               {!myStream?.isMicOn && (
