@@ -1,7 +1,5 @@
 # Meet - One-to-One Video Calling Web App
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-blue)](https://meet.jaypatel.digital/)
-
 Meet is an open-source web application that enables seamless one-to-one video calling directly from a browser—no downloads required. Built with modern web technologies, Meet provides a fast, secure, and intuitive way to connect with others in real-time.
 
 ## 🚀 Features
@@ -16,10 +14,6 @@ Meet is an open-source web application that enables seamless one-to-one video ca
 
 **Frontend:** React, TypeScript, PeerJS, Tailwind CSS, Socket.io-client, Vite  
 **Backend:** Node.js, Express, Socket.io
-
-## 📌 Live Demo
-
-Try it now: **[meet.jaypatel.digital](https://meet.jaypatel.digital/)**
 
 ## 🚀 Getting Started
 
